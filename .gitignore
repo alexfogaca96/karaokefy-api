@@ -1,0 +1,11 @@
+# music input and output
+music/
+output/
+
+# spleeter models (should appear on runtime)
+pretrained_models/
+
+# idea workspace files
+*.iws
+**/.idea/workspace.xml
+**/.idea/tasks.xml
