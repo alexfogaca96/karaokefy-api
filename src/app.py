@@ -1,11 +1,17 @@
 from os import path
 from flask import Flask, request, send_from_directory
-from core.voice_remover import VoiceRemover
-from search.music_searcher import MusicSearcher
+from src.core.voice_remover import VoiceRemover
+from src.search.music_searcher import MusicSearcher
 
 app = Flask(__name__)
 remover = VoiceRemover()
 searcher = MusicSearcher(app.root_path)
+
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    return 'Sorry, but this path "%s" is not available' % path
 
 
 @app.route('/split')

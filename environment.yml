@@ -1,0 +1,11 @@
+name: karaokefy-api
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - flask
+  - fuzzywuzzy
+  - gunicorn
+  - numpy=1.16.5
+  - python=3.7.5
+  - spleeter
