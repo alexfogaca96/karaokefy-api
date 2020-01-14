@@ -1,10 +1,14 @@
-import requests
-import json
-from time import sleep
 from .music_search_result import MusicSearchResult
-from seleniumwire import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+import json
+import requests
+from time import sleep
 from pytube import YouTube
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 chrome_driver_path = '/home/alex/Downloads/'
@@ -15,7 +19,7 @@ class RemoteSearcher:
         self.cse_url = 'https://cse.google.com/cse/element/v1'
         self.cse_params = dict(rsz='1', num='1', hl='pt-PT', source='gcsc', gss='.br', cselibv='8b2252448421acb3',
                                cx='partner-pub-9911820215479768:4038644078', safe='off',
-                               cse_tok='AKaTTZg-jGfIAJ3mrxhGPzaVDpUV:1578758834084', exp='csqr,cc',
+                               cse_tok='AKaTTZiTfoWWy9poT4ZAUEGOfAA4:1579015681629', exp='csqr,cc',
                                callback='google.search.cse.api18195')
 
     def find_music(self, music, artist):
@@ -30,13 +34,18 @@ class RemoteSearcher:
         music_ocid = self.get_music_ocid(music_url)
         if music_ocid is None:
             return MusicSearchResult(False)
-        music_video_path = requests.get('youtube.com/watch?v=' + music_ocid)
-        print(music_video_path)
+        music_video_path = requests.get('https://youtube.com/watch?v=' + music_ocid)
+        print('music_video_path %s' % music_video_path)
+        print('subtitles %s' % subtitles)
         return MusicSearchResult(False)
 
     def get_music_url(self, music, artist):
         self.cse_params['q'] = artist + ' ' + music
-        response = requests.get(url=self.cse_url, params=self.cse_params).text
+        response = requests.get(url=self.cse_url, params=self.cse_params)
+        if not response:
+            print('cse_token is outdated.')
+            return None
+        response = response.text
         first_bracket = response.find('{')
         last_bracket = response.rfind('}')
         json_response = json.loads(response[first_bracket:last_bracket - len(response) + 1])
@@ -70,11 +79,13 @@ class RemoteSearcher:
     def get_music_ocid(music_url):
         browser = webdriver.Chrome(executable_path=ChromeDriverManager().install())
         browser.get(music_url)
-        all_requests = browser.requests
-        for request in all_requests:
-            print(request.path)
-            if 'youtube.com/api/stats/atr' in request.path:
-                ocid_index = request.path.find('ocid=')
-                ocid_end_index = request.path[ocid_index:].find('&') - 1
-                return request.path[ocid_index + 5:ocid_end_index]
-        return None
+        delay = 5
+        try:
+            thumb_properties = (By.CLASS_NAME, 'plm_thumb')
+            thumb = WebDriverWait(browser, delay).until(EC.presence_of_element_located(thumb_properties))
+            src = thumb.get_attribute('src')
+            first_part = len('https://i.ytimg.com/vi/')
+            return src[first_part:- len(src) + src.rfind('/')]
+        except TimeoutException:
+            print("Page didn't load in %d seconds" % delay)
+            return None
