@@ -24,7 +24,7 @@ def split_exact_music():
     if not result.success:
         return 'Music not found.'
     print('Splitting song into voice and accompaniment!')
-    remover.remove(result.file_path)
+    remover.remove(result.file_path, result.file_name, result.file_codac)
     return 'Success!'
 
 

@@ -17,6 +17,7 @@ selenium-wire = "*"
 webdriver-manager = "*"
 pytube = "*"
 selenium = "*"
+ffprobe = "*"
 
 [requires]
 python_version = "3.6"
