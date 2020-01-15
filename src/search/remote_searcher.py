@@ -1,6 +1,10 @@
 from .music_search_result import MusicSearchResult
+
 import json
+import os
 import requests
+
+from moviepy.editor import VideoFileClip
 from pathlib import Path
 from pytube import YouTube
 from seleniumwire.webdriver import Chrome
@@ -41,12 +45,15 @@ class RemoteSearcher:
             return MusicSearchResult(False)
         video = YouTube('https://youtube.com/watch?v=' + music_ocid)
         stream = video.streams.filter(file_extension='mp4').first()
-        artist_file_path = self.music_path + artist.strip().lower()
+        normalized_artist = artist.strip().lower()
+        artist_file_path = self.music_path + normalized_artist
         Path(artist_file_path).mkdir(parents=True, exist_ok=True)
         stream.download(artist_file_path)
+        video_file = VideoFileClip(os.path.join('src', 'music', normalized_artist, video.title + '.mp4'))
+        video_file.audio.write_audiofile(os.path.join('src', 'music', normalized_artist, video.title + '.mp3'))
         with open(artist_file_path + '/' + video.title + '.txt', 'w') as subtitle_file:
             subtitle_file.write(subtitles)
-        return MusicSearchResult(True, file_path=artist_file_path, file_name=video.title, file_codac='.mp4')
+        return MusicSearchResult(True, file_path=artist_file_path, file_name=video.title, file_codac='mp3')
 
     @staticmethod
     def check_internet_connection():

@@ -18,6 +18,9 @@ webdriver-manager = "*"
 pytube = "*"
 selenium = "*"
 ffprobe = "*"
+ez-setup = "*"
+setuptools = "*"
+moviepy = "*"
 
 [requires]
 python_version = "3.6"
