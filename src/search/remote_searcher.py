@@ -1,11 +1,11 @@
 from .music_search_result import MusicSearchResult
 import json
+import urllib3
 import requests
-from time import sleep
 from pytube import YouTube
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
@@ -19,10 +19,12 @@ class RemoteSearcher:
         self.cse_url = 'https://cse.google.com/cse/element/v1'
         self.cse_params = dict(rsz='1', num='1', hl='pt-PT', source='gcsc', gss='.br', cselibv='8b2252448421acb3',
                                cx='partner-pub-9911820215479768:4038644078', safe='off',
-                               cse_tok='AKaTTZiTfoWWy9poT4ZAUEGOfAA4:1579015681629', exp='csqr,cc',
-                               callback='google.search.cse.api18195')
+                               cse_tok='AKaTTZi-PjCWQ1cgLQSqj_mx_r7y:1579066174743', exp='csqr,cc',
+                               callback='google.search.cse.api18195') # https://cse.google.com/cse/element
 
     def find_music(self, music, artist):
+        if self.check_internet_connection() is False:
+            return MusicSearchResult(False)
         music_url = self.get_music_url(music, artist)
         if music_url is None:
             print('%s by %s not found remotely.' % (music, artist))
@@ -38,6 +40,18 @@ class RemoteSearcher:
         print('music_video_path %s' % music_video_path)
         print('subtitles %s' % subtitles)
         return MusicSearchResult(False)
+
+    @staticmethod
+    def check_internet_connection():
+        try:
+            request = requests.get('http://www.google.com/', timeout=2)
+            request.raise_for_status()
+            return True
+        except requests.HTTPError as error:
+            print('Checking internet connection failed, status code {0}.'.format(error.response.status_code))
+        except requests.ConnectionError:
+            print('No internet connection available.')
+        return False
 
     def get_music_url(self, music, artist):
         self.cse_params['q'] = artist + ' ' + music
@@ -81,11 +95,11 @@ class RemoteSearcher:
         browser.get(music_url)
         delay = 5
         try:
-            thumb_properties = (By.CLASS_NAME, 'plm_thumb')
-            thumb = WebDriverWait(browser, delay).until(EC.presence_of_element_located(thumb_properties))
+            thumbnail_prop = (By.CLASS_NAME, 'plm_thumb')
+            thumb = WebDriverWait(browser, delay).until(expected_conditions.presence_of_element_located(thumbnail_prop))
             src = thumb.get_attribute('src')
             first_part = len('https://i.ytimg.com/vi/')
             return src[first_part:- len(src) + src.rfind('/')]
         except TimeoutException:
-            print("Page didn't load in %d seconds" % delay)
+            print('Page didn''t load in %d seconds' % delay)
             return None
