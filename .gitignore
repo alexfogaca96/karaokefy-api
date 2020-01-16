@@ -10,3 +10,6 @@ pretrained_models/
 **/.idea/workspace.xml
 **/.idea/tasks.xml
 **/.idea/vcs.xml
+
+# pycache
+**/__pycache__/
