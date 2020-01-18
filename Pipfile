@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 ffmpeg = "*"
-spleeter = "*"
+spleeter = {ref = "2.0.0", git = "https://github.com/alexfogaca96/spleeter.git", editable = true}
 flask = "*"
 fuzzywuzzy = "*"
 python-levenshtein = "*"

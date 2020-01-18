@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "caf7984e2b2dd6bc9fcfdba57c4f61b95d0473c975a631b6d58296466abc1358"
+            "sha256": "c48ff0cc89da35c0fc03ac84ecb077de2c2c4a15626f83c40d5705907a5b21fa"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -552,11 +552,9 @@
             "version": "==1.9.5"
         },
         "spleeter": {
-            "hashes": [
-                "sha256:83a8e287aacf56e99e6443c6f4f5d333a229e9edc8a0b5c0d8fbf1f164e7dbb0"
-            ],
-            "index": "pypi",
-            "version": "==1.4.9"
+            "editable": true,
+            "git": "https://github.com/alexfogaca96/spleeter.git",
+            "ref": "1a859f7f228b3d15167889f7cc4a98bf0d08047f"
         },
         "tensorboard": {
             "hashes": [
