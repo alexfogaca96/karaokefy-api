@@ -46,15 +46,16 @@ class RemoteSearcher:
             return MusicSearchResult(False)
         video = YouTube('https://youtube.com/watch?v=' + music_ocid)
         stream = video.streams.filter(file_extension='mp4').first()
-        normalized_artist = artist.strip().lower()
-        artist_file_path = self.music_path + normalized_artist
+        normalized_artist_name = self.normalize_name(artist)
+        artist_file_path = self.music_path + normalized_artist_name
         Path(artist_file_path).mkdir(parents=True, exist_ok=True)
-        stream.download(artist_file_path)
-        video_file = VideoFileClip(os.path.join('src', 'music', normalized_artist, video.title + '.mp4'))
-        video_file.audio.write_audiofile(os.path.join('src', 'music', normalized_artist, video.title + '.mp3'))
-        with open(artist_file_path + '/' + video.title + '.txt', 'w') as subtitle_file:
+        normalized_video_title = self.normalize_name(video.title)
+        stream.download(output_path=artist_file_path, filename=normalized_video_title)
+        video_file = VideoFileClip(os.path.join('src', 'music', normalized_artist_name, normalized_video_title + '.mp4'))
+        video_file.audio.write_audiofile(os.path.join('src', 'music', normalized_artist_name, normalized_video_title + '.mp3'))
+        with open(artist_file_path + '/' + normalized_video_title + '.txt', 'w') as subtitle_file:
             subtitle_file.write(subtitles)
-        return MusicSearchResult(True, file_path=artist_file_path, file_name=video.title, file_codac='mp3')
+        return MusicSearchResult(True, file_path=artist_file_path, file_name=normalized_video_title, file_codac='mp3')
 
     @staticmethod
     def check_internet_connection():
@@ -170,3 +171,21 @@ class RemoteSearcher:
             print('Page didn''t load in %d seconds' % delay)
             browser.__exit__()
             return None
+
+    @staticmethod
+    def normalize_name(name):
+        name = name.strip().lower()
+        name = name.replace('á', 'a')
+        name = name.replace('à', 'a')
+        name = name.replace('â', 'a')
+        name = name.replace('ã£', 'a')
+        name = name.replace('ã³', 'o')
+        name = name.replace('ã', 'a')
+        name = name.replace('&amp;', 'e')
+        name = name.replace('&', 'e')
+        name = name.replace('é', 'e')
+        name = name.replace('ê', 'e')
+        name = name.replace('í', 'i')
+        name = name.replace('ó', 'o')
+        name = name.replace('ú', 'u')
+        return name
