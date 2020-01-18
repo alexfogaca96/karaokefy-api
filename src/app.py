@@ -2,6 +2,7 @@ from flask import Flask, request, send_from_directory
 from src.core.voice_remover import VoiceRemover
 from src.search.music_searcher import MusicSearcher
 from os.path import join
+from json import dumps
 
 app = Flask(__name__)
 remover = VoiceRemover()
@@ -25,7 +26,7 @@ def split_exact_music():
         return 'Music not found.'
     print('Splitting song into voice and accompaniment!')
     remover.remove(result.file_path, result.file_name, result.file_codac)
-    return result
+    return dumps(result.__dict__)
 
 
 def get_artist_and_music():

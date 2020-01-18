@@ -1,5 +1,6 @@
 from .music_search_result import MusicSearchResult
 
+from bs4 import BeautifulSoup
 import json
 import os
 import requests
@@ -68,8 +69,9 @@ class RemoteSearcher:
         return False
 
     def get_music_url(self, music, artist):
-        self.cse_params['q'] = artist + ' ' + music
-        response = self.do_get_music_url()
+        cse_params = self.cse_params.copy()
+        cse_params['q'] = artist + ' ' + music
+        response = self.do_get_music_url(cse_params)
         response = response.text
         first_bracket = response.find('{')
         last_bracket = response.rfind('}')
@@ -77,25 +79,17 @@ class RemoteSearcher:
         music_url = json_response['results'][0]['richSnippet']['metatags']['ogUrl']
         return self.trim_translated_music_url(music_url)
 
-    def do_get_music_url(self):
+    def do_get_music_url(self, cse_params):
         try:
-            response = requests.get(url=self.cse_url, params=self.cse_params)
+            response = requests.get(url=self.cse_url, params=cse_params)
             response.raise_for_status()
             status_code = self.extract_status_from_response(response.text)
             if status_code == 403:
-                cse_token = self.update_cse_token()
-                if cse_token is None:
-                    print('Could not update cse_tok from %s' % self.cse_url)
-                    return None
-                self.cse_params['cse_tok'] = cse_token
-                response = requests.get(url=self.cse_url, params=self.cse_params)
+                cse_params['cse_tok'] = self.update_cse_token()
+                response = requests.get(url=self.cse_url, params=cse_params)
         except requests.HTTPError:
-            cse_token = self.update_cse_token()
-            if cse_token is None:
-                print('Could not update cse_tok from %s' % self.cse_url)
-                return None
-            self.cse_params['cse_tok'] = cse_token
-            response = requests.get(url=self.cse_url, params=self.cse_params)
+            cse_params['cse_tok'] = self.update_cse_token()
+            response = requests.get(url=self.cse_url, params=cse_params)
         return response
 
     @staticmethod
@@ -103,9 +97,19 @@ class RemoteSearcher:
         first_index = response.find('{')
         last_index = len(response) - response.rfind('}') - 1
         json_response = json.loads(response[first_index:-last_index])
+        if 'error' not in json_response:
+            return 200
         return json_response['error']['code']
 
     def update_cse_token(self):
+        cse_token = self.get_valid_cse_token()
+        if cse_token is None:
+            print('Could not update cse_tok from %s' % self.cse_url)
+            return None
+        self.cse_params['cse_tok'] = cse_token
+        return cse_token
+
+    def get_valid_cse_token(self):
         chrome = Chrome(ChromeDriverManager().install())
         chrome.get(self.remote_url + '?q=42')
         for request in chrome.requests:
@@ -135,7 +139,14 @@ class RemoteSearcher:
     def get_music_id_from_url(music_url):
         music_url = music_url[:-1]
         last_separation = music_url.rfind('/')
-        return music_url[last_separation + 1:]
+        music_id = music_url[last_separation + 1:]
+        if music_id.isnumeric():
+            return music_id
+        soup = BeautifulSoup(requests.get(music_url).text, 'html.parser')
+        footer_rows = soup.find_all('li', {'class': 'cnt-list-row'})
+        for row in footer_rows:
+            if row['data-url'] == music_id:
+                return row['data-id']
 
     def get_subtitles(self, music_id):
         subtitles_url = self.remote_url + 'api/v2/subtitle/' + music_id + '/'

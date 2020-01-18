@@ -21,6 +21,7 @@ ffprobe = "*"
 ez-setup = "*"
 setuptools = "*"
 moviepy = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.6"
